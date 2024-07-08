@@ -1,6 +1,5 @@
 import pandas as pd
 import os
-import io
 from time import strftime, localtime
 from IPython.display import display, HTML
 
@@ -17,7 +16,7 @@ def main() :
     time = []
     unix_time = []
 
-    module_directory = os.path.abspath("moduleUsage")
+    module_directory = os.path.abspath("parse_moduleUsage/moduleUsage")
     for filename in os.listdir(module_directory):
         with open(os.path.join(module_directory, filename)) as infile:
             for line in infile:
