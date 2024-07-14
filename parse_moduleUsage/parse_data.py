@@ -21,6 +21,7 @@ def parse_user_input():
     parser.add_argument('-pltm', '--plot_modules', action="store_true", help='Plot bar graph of unique modules')
     parser.add_argument('-u', '--unique_users', action="store_true", help='Determine number of unique users and how many times each one appears')
     parser.add_argument('-pltu', '--plot_users', action="store_true", help='Plot bar graph of unique users')
+    parser.add_argument('-n', '--top', type=int, default=5, help='Number of top modules or users to display')
 
     args = parser.parse_args()
     return args
@@ -35,7 +36,7 @@ def build_dataframe():
     time = []
     unix_time = []
 
-    module_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), 'moduleUsage'))
+    module_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), 'moduleTest'))
     for filename in os.listdir(module_directory):
         with open(os.path.join(module_directory, filename)) as infile:
             for line in infile:
@@ -97,12 +98,12 @@ def save_dataframe(df, args):
     if ('parquet' in args.filetype):
         df.to_parquet('moduleUsage.parquet')
 
-def plot_data(data, series):
-    plt.bar(range(5), series[:5], align='center', alpha=0.8)
+def plot_data(args, data, series):
+    plt.bar(range(args.top), series[:args.top], align='center', alpha=0.8)
     plt.xlabel(data)
     plt.ylabel('Frequency')
-    plt.title('Top 5 ' + data)
-    plt.xticks(range(5), series.index[:5])  # Set x-axis labels to match index values
+    plt.title('Top ' + str(args.top) + ' ' + data)
+    plt.xticks(range(args.top), series.index[:args.top])  # Set x-axis labels to match index values
     plt.show()
 
 def print_data(data, series):
@@ -120,13 +121,13 @@ def main():
     elif (args.unique_modules):
         unique_modules = df['Module'].value_counts()
         if (args.plot_modules):
-            plot_data('Modules', unique_modules)
+            plot_data(args, 'Modules', unique_modules)
         else:
             print_data('module', unique_modules)
     elif (args.unique_users):
         unique_users = df['Username'].value_counts()
         if (args.plot_users):
-            plot_data('Users', unique_users)
+            plot_data(args, 'Users', unique_users)
         else:
             print_data('user', unique_users)
     else:
