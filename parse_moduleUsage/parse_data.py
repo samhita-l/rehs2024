@@ -35,7 +35,7 @@ def build_dataframe():
     time = []
     unix_time = []
 
-    module_directory = "/Users/shirreyjin/rehs2024/parse_moduleUsage/moduleTest/"
+    module_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), 'moduleUsage'))
     for filename in os.listdir(module_directory):
         with open(os.path.join(module_directory, filename)) as infile:
             for line in infile:
