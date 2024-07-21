@@ -79,7 +79,7 @@ def extract(line, info):
     temp = text[1]
     name = temp.split("/")
 
-    if (info == "username" or info == "euid" or info == "egid" or info == "unix" or info == "path" or info == "complete"):
+    if (info == "username" or info == "euid" or info == "egid" or info == "unix" or info == "path"):
         return text[1]
     
     if (info == "module"):
