@@ -15,21 +15,23 @@ def parse_user_input():
     )
 
     parser.add_argument('-s', '--save', action="store_true", help='Save dataframe to file')
-    parser.add_argument('-t', '--filetype', type=str, default='csv', nargs='+', choices=['csv', 'parquet'], help='File type to save dataframe')
+    parser.add_argument('-ftype', '--filetype', type=str, default='csv', nargs='+', choices=['csv', 'parquet'], help='File type to save dataframe')
 
-    parser.add_argument('-m', '--unique_modules', action="store_true", help='Determine number of unique modules and how many times each one appears')
+    parser.add_argument('-mod', '--unique_modules', action="store_true", help='Determine number of unique modules and how many times each one appears')
     parser.add_argument('-pltm', '--plot_modules', action="store_true", help='Plot bar graph of unique modules')
-    parser.add_argument('-u', '--unique_users', action="store_true", help='Determine number of unique users and how many times each one appears')
+    parser.add_argument('-user', '--unique_users', action="store_true", help='Determine number of unique users and how many times each one appears')
     parser.add_argument('-pltu', '--plot_users', action="store_true", help='Plot bar graph of unique users')
-    parser.add_argument('-n', '--top', type=int, default=5, help='Number of top modules or users to display')
+    parser.add_argument('-t', '--top', type=int, default=5, help='Number of top modules or users to display')
 
     args = parser.parse_args()
     return args
 
 def build_dataframe():
     module = []
+    version = []
     hash = []
     username = []
+    path = []
     euid = []
     egid = []
     date = []
@@ -46,7 +48,9 @@ def build_dataframe():
                 euid.append(extract(key_info[1], "euid"))
                 egid.append(extract(key_info[2], "egid"))
                 module.append(extract(key_info[3], "module"))
+                version.append(extract(key_info[3], "version"))
                 hash.append(extract(key_info[3], "hash"))
+                path.append(extract(key_info[4], "path"))
 
                 unix = extract(key_info[6], "unix").strip()
                 unix_time.append(unix)
@@ -55,13 +59,15 @@ def build_dataframe():
 
     data = {
         "Module": module,
+        "Version": version,
         "Hash Value": hash,
+        "Path": path,
         "Username": username,
         "euid": euid,
         "egid": egid,
         "Date": date,
         "Time": time,
-        "Unix Time": unix_time
+        "Unix Time": unix_time,
     }
 
     df = pd.DataFrame(data)
@@ -73,14 +79,17 @@ def extract(line, info):
     temp = text[1]
     name = temp.split("/")
 
-    if (info == "username" or info == "euid" or info == "egid" or info == "unix"):
+    if (info == "username" or info == "euid" or info == "egid" or info == "unix" or info == "path" or info == "complete"):
         return text[1]
     
     if (info == "module"):
+        return name[0]
+    
+    if (info == "version"):
         if (len(name) < 2):
-            return name[0]
+            return None
         else:
-            return name[0] + "/" + name[1]
+            return name[1]
         
     if (info == "hash"):
         if (len(name) < 3):
@@ -98,18 +107,19 @@ def save_dataframe(df, args):
     if ('parquet' in args.filetype):
         df.to_parquet('moduleUsage.parquet')
 
-def plot_data(args, data, series):
+
+def plot_data(args, data_type, series):
     plt.bar(range(args.top), series[:args.top], align='center', alpha=0.8)
-    plt.xlabel(data)
+    plt.xlabel(data_type)
     plt.ylabel('Frequency')
-    plt.title('Top ' + str(args.top) + ' ' + data)
-    plt.xticks(range(args.top), series.index[:args.top])  # Set x-axis labels to match index values
+    plt.title('Top ' + str(args.top) + ' ' + data_type)
+    plt.xticks(range(args.top), series.index[:args.top])
     plt.show()
 
-def print_data(data, series):
+def print_data(data_type, series):
     print(series)
-    print("\nThere are " + str(len(series)) + " unique " + data + "s. The complete list is shown above, ranked by how frequently each " + data + " appears.\n")
-    print("The most frequent " + data + " is " + series.idxmax() + " with " + str(series.max()) + " occurrences.\n")
+    print("\nThere are " + str(len(series)) + " unique " + data_type + "s. The complete list is shown above, ranked by how many times each " + data_type + " appears.\n")
+    print("The most frequent " + data_type + " is " + series.idxmax() + " with " + str(series.max()) + " occurrences.\n")
 
 
 def main():
@@ -119,7 +129,13 @@ def main():
     if (args.save):
         save_dataframe(df, args)
     elif (args.unique_modules):
-        unique_modules = df['Module'].value_counts()
+        # Combine module and version to form a new column
+        df['Complete Modules'] = df['Module'] + '/' + df['Version']
+
+        # Adjust based on hash value
+        df.loc[df['Hash Value'].notnull(), 'Complete Modules'] += '/' + df['Hash Value']
+        unique_modules = df['Complete Modules'].value_counts()
+
         if (args.plot_modules):
             plot_data(args, 'Modules', unique_modules)
         else:
