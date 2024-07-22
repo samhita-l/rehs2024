@@ -23,7 +23,7 @@ def parse_user_input():
     parser.add_argument('-user', '--unique_users', action="store_true", help='Determine number of unique users and how many times each one appears')
     parser.add_argument('-pltu', '--plot_users', action="store_true", help='Plot bar graph of unique users')
     parser.add_argument('-t', '--top', type=int, default=5, help='Number of top modules or users to display')
-    parser.add_argument('--hash', action="store_true", help='Use SHA-256 hash value to determine unique modules')
+    parser.add_argument('--hash', action="store_true", help='Use MD5 hash value to determine unique modules')
 
     args = parser.parse_args()
     return args
@@ -31,7 +31,7 @@ def parse_user_input():
 def build_dataframe():
     module = []
     version = []
-    hash = []
+    hash_list = []
     username = []
     path = []
     euid = []
@@ -44,6 +44,9 @@ def build_dataframe():
     for filename in os.listdir(module_directory):
         with open(os.path.join(module_directory, filename)) as infile:
             for line in infile:
+                if line.count("username") != 1:
+                    continue
+
                 key_info = line[line.index("username"):].split(" ")
 
                 username.append(extract(key_info[0], "username"))
@@ -51,7 +54,7 @@ def build_dataframe():
                 egid.append(extract(key_info[2], "egid"))
                 module.append(extract(key_info[3], "module"))
                 version.append(extract(key_info[3], "version"))
-                hash.append(extract(key_info[3], "hash"))
+                hash_list.append(extract(key_info[3], "hash"))
                 path.append(extract(key_info[4], "path"))
 
                 unix = extract(key_info[6], "unix").strip()
@@ -62,7 +65,7 @@ def build_dataframe():
     data = {
         "Module": module,
         "Version": version,
-        "Hash Value": hash,
+        "Hash Value": hash_list,
         "Path": path,
         "Username": username,
         "euid": euid,
@@ -126,7 +129,7 @@ def print_data(data_type, series):
 
 
 def generate_hash(path):
-    hash_object = hashlib.sha256()
+    hash_object = hashlib.md5()
     hash_object.update(path.encode())
     file_hash = hash_object.hexdigest()
         
@@ -137,43 +140,32 @@ def main():
     args = parse_user_input()
     df = build_dataframe()
 
-    if args.save:
+    if (args.save):
         save_dataframe(df, args)
-    elif args.unique_modules:
+    elif (args.unique_modules):
         df['Complete Modules'] = df['Module'] + '/' + df['Version']
-        df['SHA-256'] = df['Path'].apply(generate_hash)
-        df['Complete Modules'] += '  -->  ' + df['SHA-256']
-        unique_modules = df['Complete Modules'].value_counts()
         
-        cpu_gpu_counts = df['Path'].apply(lambda x: 'CPU' if 'cpu' in x else 'GPU' if 'gpu' in x else 'Other').value_counts()
+        if (args.hash):
+            df['MD5'] = df['Path'].apply(generate_hash)
+            df['Complete Modules'] += '  -->  ' + df['MD5']
+            unique_modules = df['Complete Modules'].value_counts()
+        else:
+            df.loc[df['Hash Value'].notnull(), 'Complete Modules'] += '/' + df['Hash Value']
+            unique_modules = df['Complete Modules'].value_counts()
 
-    if args.plot_modules:
-        plot_data(args, 'Modules', unique_modules)
-        plot_data(args, 'CPU/GPU', cpu_gpu_counts)
-    else:
+        if (args.plot_modules):
+            plot_data(args, 'Modules', unique_modules)
+        else:
             print_data('module', unique_modules)
-            print_data('CPU/GPU', cpu_gpu_counts)
-elif args.unique_users:
-    unique_users = df['Username'].value_counts()
-    if args.plot_users:
+    elif (args.unique_users):
+        unique_users = df['Username'].value_counts()
+        if (args.plot_users):
             plot_data(args, 'Users', unique_users)
-    else:
+        else:
             print_data('user', unique_users)
     else:
         print(df)
 
-
-    instance_modules = set(df['Module'].unique())
-        user_modules = df.groupby('Username')['Module'].apply(set)
-        users_never_use_instance = {
-            user: len(instance_modules - modules) for user, modules in user_modules.items()
-        }
-        never_used_instances = {user: count for user, count in users_never_use_instance.items() if count > 0}
-        print("Users who never use one of the Spack instance modules:" + str{len(never_used_instances)}")
-        print(never_used_instances)
-
-    else:
-        print(df)
-
+    
 if __name__ == "__main__":
     main()
