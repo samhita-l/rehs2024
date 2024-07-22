@@ -137,32 +137,43 @@ def main():
     args = parse_user_input()
     df = build_dataframe()
 
-    if (args.save):
+    if args.save:
         save_dataframe(df, args)
-    elif (args.unique_modules):
+    elif args.unique_modules:
         df['Complete Modules'] = df['Module'] + '/' + df['Version']
+        df['SHA-256'] = df['Path'].apply(generate_hash)
+        df['Complete Modules'] += '  -->  ' + df['SHA-256']
+        unique_modules = df['Complete Modules'].value_counts()
         
-        if (args.hash):
-            df['SHA-256'] = df['Path'].apply(generate_hash)
-            df['Complete Modules'] += '  -->  ' + df['SHA-256']
-            unique_modules = df['Complete Modules'].value_counts()
-        else:
-            df.loc[df['Hash Value'].notnull(), 'Complete Modules'] += '/' + df['Hash Value']
-            unique_modules = df['Complete Modules'].value_counts()
+        cpu_gpu_counts = df['Path'].apply(lambda x: 'CPU' if 'cpu' in x else 'GPU' if 'gpu' in x else 'Other').value_counts()
 
-        if (args.plot_modules):
-            plot_data(args, 'Modules', unique_modules)
-        else:
+    if args.plot_modules:
+        plot_data(args, 'Modules', unique_modules)
+        plot_data(args, 'CPU/GPU', cpu_gpu_counts)
+    else:
             print_data('module', unique_modules)
-    elif (args.unique_users):
-        unique_users = df['Username'].value_counts()
-        if (args.plot_users):
+            print_data('CPU/GPU', cpu_gpu_counts)
+elif args.unique_users:
+    unique_users = df['Username'].value_counts()
+    if args.plot_users:
             plot_data(args, 'Users', unique_users)
-        else:
+    else:
             print_data('user', unique_users)
     else:
         print(df)
 
-    
+
+    instance_modules = set(df['Module'].unique())
+        user_modules = df.groupby('Username')['Module'].apply(set)
+        users_never_use_instance = {
+            user: len(instance_modules - modules) for user, modules in user_modules.items()
+        }
+        never_used_instances = {user: count for user, count in users_never_use_instance.items() if count > 0}
+        print("Users who never use one of the Spack instance modules:" + str{len(never_used_instances)}")
+        print(never_used_instances)
+
+    else:
+        print(df)
+
 if __name__ == "__main__":
     main()
