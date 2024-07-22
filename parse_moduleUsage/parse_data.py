@@ -3,6 +3,7 @@ import os
 from time import strftime, localtime
 import argparse
 import matplotlib.pyplot as plt
+import hashlib
 
 pd.set_option('display.max_rows', None)
 
@@ -22,6 +23,7 @@ def parse_user_input():
     parser.add_argument('-user', '--unique_users', action="store_true", help='Determine number of unique users and how many times each one appears')
     parser.add_argument('-pltu', '--plot_users', action="store_true", help='Plot bar graph of unique users')
     parser.add_argument('-t', '--top', type=int, default=5, help='Number of top modules or users to display')
+    parser.add_argument('--hash', action="store_true", help='Use SHA-256 hash value to determine unique modules')
 
     args = parser.parse_args()
     return args
@@ -116,10 +118,19 @@ def plot_data(args, data_type, series):
     plt.xticks(range(args.top), series.index[:args.top])
     plt.show()
 
+
 def print_data(data_type, series):
     print(series)
     print("\nThere are " + str(len(series)) + " unique " + data_type + "s. The complete list is shown above, ranked by how many times each " + data_type + " appears.\n")
     print("The most frequent " + data_type + " is " + series.idxmax() + " with " + str(series.max()) + " occurrences.\n")
+
+
+def generate_hash(path):
+    hash_object = hashlib.sha256()
+    hash_object.update(path.encode())
+    file_hash = hash_object.hexdigest()
+        
+    return file_hash
 
 
 def main():
@@ -129,12 +140,15 @@ def main():
     if (args.save):
         save_dataframe(df, args)
     elif (args.unique_modules):
-        # Combine module and version to form a new column
         df['Complete Modules'] = df['Module'] + '/' + df['Version']
-
-        # Adjust based on hash value
-        df.loc[df['Hash Value'].notnull(), 'Complete Modules'] += '/' + df['Hash Value']
-        unique_modules = df['Complete Modules'].value_counts()
+        
+        if (args.hash):
+            df['SHA-256'] = df['Path'].apply(generate_hash)
+            df['Complete Modules'] += '  -->  ' + df['SHA-256']
+            unique_modules = df['Complete Modules'].value_counts()
+        else:
+            df.loc[df['Hash Value'].notnull(), 'Complete Modules'] += '/' + df['Hash Value']
+            unique_modules = df['Complete Modules'].value_counts()
 
         if (args.plot_modules):
             plot_data(args, 'Modules', unique_modules)
