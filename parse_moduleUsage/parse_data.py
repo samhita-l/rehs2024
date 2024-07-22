@@ -20,10 +20,16 @@ def parse_user_input():
 
     parser.add_argument('-mod', '--unique_modules', action="store_true", help='Determine number of unique modules and how many times each one appears')
     parser.add_argument('-pltm', '--plot_modules', action="store_true", help='Plot bar graph of unique modules')
+    parser.add_argument('--spack', action="store_true", help='Search for Spack instance modules')
+    parser.add_argument('--hash', action="store_true", help='Use MD5 hash value to determine unique modules')
+
     parser.add_argument('-user', '--unique_users', action="store_true", help='Determine number of unique users and how many times each one appears')
     parser.add_argument('-pltu', '--plot_users', action="store_true", help='Plot bar graph of unique users')
+    
+    parser.add_argument('-f', '--find', type=str, help='Find specific module or user')
     parser.add_argument('-t', '--top', type=int, default=5, help='Number of top modules or users to display')
-    parser.add_argument('--hash', action="store_true", help='Use MD5 hash value to determine unique modules')
+    
+
 
     args = parser.parse_args()
     return args
@@ -63,7 +69,7 @@ def build_dataframe():
                 time.append(strftime('%H:%M:%S', localtime(float(unix))))
 
     data = {
-        "Module": module,
+        "Name": module,
         "Version": version,
         "Hash Value": hash_list,
         "Path": path,
@@ -114,18 +120,38 @@ def save_dataframe(df, args):
 
 
 def plot_data(args, data_type, series):
-    plt.bar(range(args.top), series[:args.top], align='center', alpha=0.8)
+    bars = plt.bar(range(args.top), series[:args.top], align='center', alpha=0.8)
+
     plt.xlabel(data_type)
     plt.ylabel('Frequency')
-    plt.title('Top ' + str(args.top) + ' ' + data_type)
+
+    if (args.spack):
+        plt.title('Occurrences of Spack Instance Modules')
+    else:
+        plt.title('Top ' + str(args.top) + ' ' + data_type)
+
     plt.xticks(range(args.top), series.index[:args.top])
+
+    # Add the bar values on top of the bars
+    for bar in bars:
+        yval = bar.get_height()
+        plt.text(bar.get_x() + bar.get_width()/2, yval + 0.005, round(yval, 2), ha='center', va='bottom')
+
     plt.show()
 
 
-def print_data(data_type, series):
-    print(series)
-    print("\nThere are " + str(len(series)) + " unique " + data_type + "s. The complete list is shown above, ranked by how many times each " + data_type + " appears.\n")
-    print("The most frequent " + data_type + " is " + series.idxmax() + " with " + str(series.max()) + " occurrences.\n")
+def print_data(args, data_type, series):
+    if (args.find is None):
+        print(series)
+        print("\nThere are " + str(len(series)) + " unique " + data_type + "s. The complete list is shown above, ranked by how many times each " + data_type + " appears.\n")
+        print("The most frequent " + data_type + " is " + series.idxmax() + " with " + str(series.max()) + " occurrences.\n")
+    else:
+        try:
+            print()
+            print(series)
+            print("\nThis module appears " + str(series[args.find]) + " times.\n")
+        except KeyError:
+            print("\nNo modules exactly match the inputted keyword.\n")
 
 
 def generate_hash(path):
@@ -142,27 +168,34 @@ def main():
 
     if (args.save):
         save_dataframe(df, args)
+
     elif (args.unique_modules):
-        df['Complete Modules'] = df['Module'] + '/' + df['Version']
+        df['Modules'] = df['Name'] + '/' + df['Version']
         
         if (args.hash):
             df['MD5'] = df['Path'].apply(generate_hash)
-            df['Complete Modules'] += '  -->  ' + df['MD5']
-            unique_modules = df['Complete Modules'].value_counts()
+            df['Modules'] += '  -->  ' + df['MD5']
         else:
-            df.loc[df['Hash Value'].notnull(), 'Complete Modules'] += '/' + df['Hash Value']
-            unique_modules = df['Complete Modules'].value_counts()
+            df.loc[df['Hash Value'].notnull(), 'Modules'] += '/' + df['Hash Value']
+
+        unique_modules = df['Modules'].value_counts() 
+        if (args.spack):
+            unique_modules = unique_modules[unique_modules.index.str.contains('cpu|gpu')]
+        if (args.find is not None):
+            unique_modules = unique_modules[unique_modules.index.str.contains(args.find)]
 
         if (args.plot_modules):
             plot_data(args, 'Modules', unique_modules)
         else:
-            print_data('module', unique_modules)
+            print_data(args, 'module', unique_modules)
+
     elif (args.unique_users):
         unique_users = df['Username'].value_counts()
         if (args.plot_users):
             plot_data(args, 'Users', unique_users)
         else:
-            print_data('user', unique_users)
+            print_data(args, 'user', unique_users)
+
     else:
         print(df)
 
