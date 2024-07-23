@@ -3,6 +3,7 @@ import os
 from time import strftime, localtime
 import argparse
 import matplotlib.pyplot as plt
+import numpy as np
 import hashlib
 
 pd.set_option('display.max_rows', None)
@@ -19,13 +20,12 @@ def parse_user_input():
     parser.add_argument('-ftype', '--filetype', type=str, default='csv', nargs='+', choices=['csv', 'parquet'], help='File type to save dataframe')
 
     parser.add_argument('-mod', '--unique_modules', action="store_true", help='Determine number of unique modules and how many times each one appears')
-    parser.add_argument('-pltm', '--plot_modules', action="store_true", help='Plot bar graph of unique modules')
     parser.add_argument('--spack', action="store_true", help='Search for Spack instance modules')
     parser.add_argument('--hash', action="store_true", help='Use MD5 hash value to determine unique modules')
 
-    parser.add_argument('-user', '--unique_users', action="store_true", help='Determine number of unique users and how many times each one appears')
-    parser.add_argument('-pltu', '--plot_users', action="store_true", help='Plot bar graph of unique users')
+    parser.add_argument('-users', '--unique_users', action="store_true", help='Determine number of unique users and how many times each one appears')
     
+    parser.add_argument('-plt', '--plot', action="store_true", help='Plot bar graph of unique modules/users')
     parser.add_argument('-f', '--find', type=str, help='Find specific module or user')
     parser.add_argument('-t', '--top', type=int, default=5, help='Number of top modules or users to display')
     
@@ -46,11 +46,11 @@ def build_dataframe():
     time = []
     unix_time = []
 
-    module_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), 'moduleTest'))
+    module_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), 'moduleUsage'))
     for filename in os.listdir(module_directory):
         with open(os.path.join(module_directory, filename)) as infile:
             for line in infile:
-                if line.count("username") != 1:
+                if line.count("username") != 1 or line.count("gpu/0.17.3a") > 0:
                     continue
 
                 key_info = line[line.index("username"):].split(" ")
@@ -120,24 +120,32 @@ def save_dataframe(df, args):
 
 
 def plot_data(args, data_type, series):
-    bars = plt.bar(range(args.top), series[:args.top], align='center', alpha=0.8)
-
-    plt.xlabel(data_type)
-    plt.ylabel('Frequency')
-
-    if (args.spack):
-        plt.title('Occurrences of Spack Instance Modules')
+    # Determine the title based on user input
+    if args.spack:
+        plot_title = 'Breakdown of Spack Instance Modules'
+    elif args.find is not None:
+        plot_title = f"Breakdown of {args.find} Modules in moduleUsage Logs"
     else:
-        plt.title('Top ' + str(args.top) + ' ' + data_type)
+        plot_title = f"Breakdown of Top {args.top} {data_type} in moduleUsage Logs"
 
-    plt.xticks(range(args.top), series.index[:args.top])
+    # Sort the series by values and select the top 'args.top' items
+    top_series = series.sort_values(ascending=False).head(args.top)
 
-    # Add the bar values on top of the bars
-    for bar in bars:
-        yval = bar.get_height()
-        plt.text(bar.get_x() + bar.get_width()/2, yval + 0.005, round(yval, 2), ha='center', va='bottom')
+    # Plotting the pie chart
+    pie_chart = top_series.plot.pie(
+        labels=top_series.index,    # Use index as labels
+        autopct='%1.1f%%',          # Show percentages with one decimal place
+        startangle=90,              # Start angle at 90 degrees (top of the pie)
+        title=plot_title,
+        label='',                   # No need for extra labels
+    )
 
-    plt.show()
+    # Adjust legend position
+    pie_chart.legend(loc='center left', bbox_to_anchor=(-0.2, 0.5))
+
+    # Add labels and percentage to each slice
+    pie_chart.set_ylabel('')        # Clear default ylabel
+    plt.show(block=True)
 
 
 def print_data(args, data_type, series):
@@ -149,9 +157,9 @@ def print_data(args, data_type, series):
         try:
             print()
             print(series)
-            print("\nThis module appears " + str(series[args.find]) + " times.\n")
+            print("\nThis " + data_type + " appears " + str(series[args.find]) + " times.\n")
         except KeyError:
-            print("\nNo modules exactly match the inputted keyword.\n")
+            print("\nNo " + data_type + " exactly matches the inputted keyword.\n")
 
 
 def generate_hash(path):
@@ -184,14 +192,14 @@ def main():
         if (args.find is not None):
             unique_modules = unique_modules[unique_modules.index.str.contains(args.find)]
 
-        if (args.plot_modules):
+        if (args.plot):
             plot_data(args, 'Modules', unique_modules)
         else:
             print_data(args, 'module', unique_modules)
 
     elif (args.unique_users):
         unique_users = df['Username'].value_counts()
-        if (args.plot_users):
+        if (args.plot):
             plot_data(args, 'Users', unique_users)
         else:
             print_data(args, 'user', unique_users)
