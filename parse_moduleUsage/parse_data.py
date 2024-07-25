@@ -20,7 +20,7 @@ def parse_user_input():
 
     parser.add_argument('-mod', '--unique_modules', action="store_true", help='Determine number of unique modules and how many times each one appears')
     parser.add_argument('--spack', action="store_true", help='Search for Spack instance modules')
-    parser.add_argument('--spack_root', action="store_true", help='Search for software modules on different Spack instances')
+    parser.add_argument('--spack_root', type=str, help='Search for modules with specific Spack root path')
     parser.add_argument('--hash', action="store_true", help='Use MD5 hash value to determine unique modules')
 
     parser.add_argument('-users', '--unique_users', action="store_true", help='Determine number of unique users and how many times each one appears')
@@ -55,9 +55,17 @@ def build_dataframe(args):
 
                 key_info = line[line.index("username"):].split(" ")
 
-                if (args.spack_root):
-                    roots = ['cm/shared/apps/spack/0.17.3/cpu/b', '/cm/shared/apps/spack/0.17.3/gpu/b', 'cm/shared/apps/spack/cpu', '/cm/shared/apps/spack/gpu']
-                    if (not any(root in key_info[4] for root in roots)):
+                if (args.spack_root is not None):
+                    if (args.spack_root == "cpu/0.17.3b"):
+                        root = "/cm/shared/apps/spack/0.17.3/cpu/b"
+                    if (args.spack_root == "gpu/0.17.3b"):
+                        root = "/cm/shared/apps/spack/0.17.3/gpu/b"
+                    if (args.spack_root == "cpu/0.15.4"):
+                        root = "/cm/shared/apps/spack/cpu"
+                    if (args.spack_root == "gpu/0.15.4"):
+                        root = "/cm/shared/apps/spack/gpu"
+                        
+                    if (root not in key_info[4]):
                         continue
 
                 username.append(extract(key_info[0], "username"))
@@ -130,6 +138,8 @@ def plot_data(args, data_type, series):
         plot_title = 'Breakdown of Spack Instance Modules'
     elif args.find is not None:
         plot_title = f"Breakdown of {args.find} Modules in moduleUsage Logs"
+    elif args.spack_root is not None:
+        plot_title = f"Breakdown of Modules Associated with {args.spack_root} in moduleUsage Logs"
     else:
         plot_title = f"Breakdown of Top {args.top} {data_type} in moduleUsage Logs"
 
@@ -146,22 +156,26 @@ def plot_data(args, data_type, series):
     )
 
     # Adjust legend position
-    pie_chart.legend(loc='center left', bbox_to_anchor=(-0.2, 0.5))
+    pie_chart.legend(loc='center left', bbox_to_anchor=(-0.2, 0.8))
 
     # Add labels and percentage to each slice
     pie_chart.set_ylabel('')        # Clear default ylabel
     plt.show(block=True)
 
 
-def print_data(args, data_type, series):
+def output_data(args, data_type, series):
+    print()
+    print(series)
+
     if (args.find is None):
-        print(series)
-        print("\nThere are " + str(len(series)) + " unique " + data_type + "s. The complete list is shown above, ranked by how many times each " + data_type + " appears.\n")
-        print("The most frequent " + data_type + " is " + series.idxmax() + " with " + str(series.max()) + " occurrences.\n")
+        if (args.spack_root is not None):
+            print("\nThere are " + str(len(series)) + " unique " + data_type + "s associated with the Spack instance " + args.spack_root + ". The complete list is shown above, ranked by how many times each " + data_type + " appears.\n")
+            print("The most frequent " + data_type + " is " + series.idxmax() + " with " + str(series.max()) + " occurrences.\n")
+        else:
+            print("\nThere are " + str(len(series)) + " unique " + data_type + "s. The complete list is shown above, ranked by how many times each " + data_type + " appears.\n")
+            print("The most frequent " + data_type + " is " + series.idxmax() + " with " + str(series.max()) + " occurrences.\n")
     else:
         try:
-            print()
-            print(series)
             print("\nThis " + data_type + " appears " + str(series[args.find]) + " times.\n")
         except KeyError:
             print("\nNo " + data_type + " exactly matches the inputted keyword.\n")
@@ -200,14 +214,14 @@ def main():
         if (args.plot):
             plot_data(args, 'Modules', unique_modules)
         else:
-            print_data(args, 'module', unique_modules)
+            output_data(args, 'module', unique_modules)
 
     elif (args.unique_users):
         unique_users = df['Username'].value_counts()
         if (args.plot):
             plot_data(args, 'Users', unique_users)
         else:
-            print_data(args, 'user', unique_users)
+            output_data(args, 'user', unique_users)
 
     else:
         print(df)
