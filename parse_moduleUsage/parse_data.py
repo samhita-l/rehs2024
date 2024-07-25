@@ -3,7 +3,6 @@ import os
 from time import strftime, localtime
 import argparse
 import matplotlib.pyplot as plt
-import numpy as np
 import hashlib
 
 pd.set_option('display.max_rows', None)
@@ -21,6 +20,7 @@ def parse_user_input():
 
     parser.add_argument('-mod', '--unique_modules', action="store_true", help='Determine number of unique modules and how many times each one appears')
     parser.add_argument('--spack', action="store_true", help='Search for Spack instance modules')
+    parser.add_argument('--spack_root', action="store_true", help='Search for software modules on different Spack instances')
     parser.add_argument('--hash', action="store_true", help='Use MD5 hash value to determine unique modules')
 
     parser.add_argument('-users', '--unique_users', action="store_true", help='Determine number of unique users and how many times each one appears')
@@ -34,7 +34,7 @@ def parse_user_input():
     args = parser.parse_args()
     return args
 
-def build_dataframe():
+def build_dataframe(args):
     module = []
     version = []
     hash_list = []
@@ -46,7 +46,7 @@ def build_dataframe():
     time = []
     unix_time = []
 
-    module_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), 'moduleUsage'))
+    module_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), 'moduleTest'))
     for filename in os.listdir(module_directory):
         with open(os.path.join(module_directory, filename)) as infile:
             for line in infile:
@@ -54,6 +54,11 @@ def build_dataframe():
                     continue
 
                 key_info = line[line.index("username"):].split(" ")
+
+                if (args.spack_root):
+                    roots = ['cm/shared/apps/spack/0.17.3/cpu/b', '/cm/shared/apps/spack/0.17.3/gpu/b', 'cm/shared/apps/spack/cpu', '/cm/shared/apps/spack/gpu']
+                    if (not any(root in key_info[4] for root in roots)):
+                        continue
 
                 username.append(extract(key_info[0], "username"))
                 euid.append(extract(key_info[1], "euid"))
@@ -172,7 +177,7 @@ def generate_hash(path):
 
 def main():
     args = parse_user_input()
-    df = build_dataframe()
+    df = build_dataframe(args)
 
     if (args.save):
         save_dataframe(df, args)
