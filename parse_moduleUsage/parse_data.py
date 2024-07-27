@@ -4,6 +4,7 @@ from time import strftime, localtime
 import argparse
 import matplotlib.pyplot as plt
 import hashlib
+import datetime as datetime
 
 pd.set_option('display.max_rows', None)
 
@@ -26,13 +27,13 @@ def parse_user_input():
     parser.add_argument('-users', '--unique_users', action="store_true", help='Determine number of unique users and how many times each one appears')
     
     parser.add_argument('-plt', '--plot', action="store_true", help='Plot bar graph of unique modules/users')
-    parser.add_argument('-f', '--find', type=str, help='Find specific module or user')
     parser.add_argument('-t', '--top', type=int, default=5, help='Number of top modules or users to display')
-    
-
+    parser.add_argument('-all', '--include_all', action="store_true", help='Include all values in pie chart')
+    parser.add_argument('-f', '--find', type=str, help='Find specific module or user')
 
     args = parser.parse_args()
     return args
+
 
 def build_dataframe(args):
     module = []
@@ -132,7 +133,7 @@ def save_dataframe(df, args):
         df.to_parquet('moduleUsage.parquet')
 
 
-def plot_data(args, data_type, series):
+def plot_data(args, data_type, df, series):
     # Determine the title based on user input
     if args.spack:
         plot_title = 'Breakdown of Spack Instance Modules'
@@ -143,23 +144,83 @@ def plot_data(args, data_type, series):
     else:
         plot_title = f"Breakdown of Top {args.top} {data_type} in moduleUsage Logs"
 
+    top_modules = series.index
+
+    df['Date'] = pd.to_datetime(df['Date'])
+    filtered_df = df[df['Modules'].isin(top_modules)]
+    start_date = filtered_df['Date'].min().strftime("%m-%d-%Y")
+    end_date = filtered_df['Date'].max().strftime("%m-%d-%Y")
+
+    plot_title += f"\n\nFrom {start_date} to {end_date}"    
+
+
     # Sort the series by values and select the top 'args.top' items
     top_series = series.sort_values(ascending=False).head(args.top)
 
-    # Plotting the pie chart
-    pie_chart = top_series.plot.pie(
+    if args.include_all:
+        # Aggregate "Other" category
+        other_series = series[~series.index.isin(top_series.index)]
+        if not other_series.empty:
+            other_series = pd.Series({'Other': other_series.sum()})
+            # Concatenate top_series with the "Other" category
+            top_series = pd.concat([top_series, other_series])
+
+        start_date = df['Date'].min()
+        end_date = df['Date'].max()
+        total_occurrences = series.sum()
+    else:
+        total_occurrences = top_series.sum()
+
+    # Create a new figure and axis
+    fig, ax = plt.subplots(figsize=(14, 7))
+
+    # Plot the pie chart
+    wedges, texts, autotexts = ax.pie(
+        top_series,
         labels=top_series.index,    # Use index as labels
         autopct='%1.1f%%',          # Show percentages with one decimal place
-        startangle=90,              # Start angle at 90 degrees (top of the pie)
-        title=plot_title,
-        label='',                   # No need for extra labels
+        startangle=90               # Start angle at 90 degrees (top of the pie)
     )
 
-    # Adjust legend position
-    pie_chart.legend(loc='center left', bbox_to_anchor=(-0.2, 0.8))
+    # Set the plot title
+    ax.set_title(plot_title)
 
-    # Add labels and percentage to each slice
-    pie_chart.set_ylabel('')        # Clear default ylabel
+    # Add a new axis on the left side of the pie chart for the data table
+    table_ax = fig.add_axes([0.05, 0.1, 0.2, 0.8])  # Adjust the position and size as needed
+
+    # Create the table data
+    table_data = pd.DataFrame({
+        'Module': top_series.index,
+        'Occurrences': top_series.values,
+        'Percentage': [f'{pct:.1f}%' for pct in top_series / total_occurrences * 100]
+    })
+    
+    # Add totals row
+    total_percentage = 100.0
+    table_data.loc[len(table_data)] = ['Total', total_occurrences, f'{total_percentage:.1f}%']
+
+    # Add the table to the axis
+    table = table_ax.table(
+        cellText=table_data.values,
+        colLabels=table_data.columns,
+        cellLoc='center',
+        loc='center'
+    )
+    
+    table.auto_set_font_size(False)
+    table.set_fontsize(10)
+    table.scale(1.2, 1.2)  # Scale the table if needed
+
+    # Hide the table axis
+    table_ax.axis('off')
+
+    # Adjust legend position to the right side
+    ax.legend(loc='center left', bbox_to_anchor=(1.1, 0.8))
+
+    # Clear default ylabel
+    ax.set_ylabel('')
+
+    # Show the plot
     plt.show(block=True)
 
 
@@ -212,14 +273,14 @@ def main():
             unique_modules = unique_modules[unique_modules.index.str.contains(args.find)]
 
         if (args.plot):
-            plot_data(args, 'Modules', unique_modules)
+            plot_data(args, 'Modules', df, unique_modules)
         else:
             output_data(args, 'module', unique_modules)
 
     elif (args.unique_users):
         unique_users = df['Username'].value_counts()
         if (args.plot):
-            plot_data(args, 'Users', unique_users)
+            plot_data(args, 'Users', df, unique_users)
         else:
             output_data(args, 'user', unique_users)
 
