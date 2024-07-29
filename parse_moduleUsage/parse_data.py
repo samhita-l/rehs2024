@@ -230,6 +230,7 @@ def plot_data(args, data_type, df, series):
     # Show the plot
     plt.show(block=True)
 
+
 def output_data(args, data_type, series):
     print()
     print(series)
