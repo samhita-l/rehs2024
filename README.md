@@ -1,5 +1,5 @@
-# Research Experience for High School Students 2024
-Developed by Samhita Lagisetti and Ethan Jin under the supervision of Dr. Martin Kandes
+# REHS 2024
+Part of the Research Experience for High School Students (REHS) program. Developed by Samhita Lagisetti and Ethan Jin under the supervision of Dr. Martin Kandes
 
 # Description
 Many users have implemented thousands of software modules on the Expanse supercomputer. These modules are tracked within various module usage logs, each containing hundreds of thousands of lines. Our goal was to sift through this data using Pandas (a Python library) and answer different queries about it, including but not limited to:
@@ -54,7 +54,7 @@ Queries:
   - "--spack_root" --> Search for modules associated with specific Spack root module(e.g. cpu/0.17.3b)
 
 Example list:
-``Modules
+`Modules
 cpu/0.15.4                                 86089
 cpu/0.17.3b                                83815
 gcc/10.2.0                                 55165
