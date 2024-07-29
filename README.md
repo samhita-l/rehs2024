@@ -54,7 +54,9 @@ Queries:
   - "--spack_root" --> Search for modules associated with specific Spack root module(e.g. cpu/0.17.3b)
 
 Example list:
+
 ![Screenshot 2024-07-28 at 11 25 13 PM](https://github.com/user-attachments/assets/e02837ea-0f3b-493b-9cea-223228d3cb72)
+
 ........
 ![Screenshot 2024-07-28 at 11 25 21 PM](https://github.com/user-attachments/assets/8532a912-941b-4bcf-b03d-4c5de803555c)
 ### Display as a Pie Chart
