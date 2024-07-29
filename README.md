@@ -54,22 +54,9 @@ Queries:
   - "--spack_root" --> Search for modules associated with specific Spack root module(e.g. cpu/0.17.3b)
 
 Example list:
-`Modules
-cpu/0.15.4                                 86089
-cpu/0.17.3b                                83815
-gcc/10.2.0                                 55165
-cmake/3.18.2                               32077
-openmpi/4.0.4                              31234
-openblas/0.3.10-openmp                     18776
-gaussian/16.C.01                           16929
-gnuplot/5.2.8                              16327
-gmp/6.1.2                                  16228
-mpfr/4.0.2                                 16212
-                      .....
-                      
-There are 440 unique modules. The complete list is shown above, ranked by how many times each module appears.
-The most frequent module is cpu/0.15.4 with 86089 occurrences.`
-
+![Screenshot 2024-07-28 at 11 25 13 PM](https://github.com/user-attachments/assets/e02837ea-0f3b-493b-9cea-223228d3cb72)
+........
+![Screenshot 2024-07-28 at 11 25 21 PM](https://github.com/user-attachments/assets/8532a912-941b-4bcf-b03d-4c5de803555c)
 ### Display as a Pie Chart
 To display the modules/users on a pie chart, you must still type the aforementioned queries(e.g. "-users" and "-mod"). However, our project offers robust options to customize the graph.
 
@@ -80,7 +67,6 @@ Queries:
 
 Example chart:
 ![cpu_table_all](https://github.com/user-attachments/assets/f2cdc65d-4d1f-4e8b-b9b4-a7492bd69be3)
-
 # Acknowledgements
 This entire project wouldn't be possible without the efforts of program coordinator Ange Mason and consistent guidance from our mentor, Dr. Kandes. Additionally, we would like to thank UCSD and SDSC for hosting this amazing program!
 
