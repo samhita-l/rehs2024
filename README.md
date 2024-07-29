@@ -44,31 +44,32 @@ To save the dataframe to a file, type "-s" or "--save" and the file type, either
 ## Find unique modules/users
 One of the core functionalities is sifting through the data to find unique users and modules.
 
-Hashing option: some modules, despite having the same name, differ depending on their origin. Automatic 7-digit hashing is provided, but if you want to provide each module with an MD5 hash based on its path, just type "--hash".
+Hashing option: some modules, despite having the same name, differ depending on their origin. Automatic 7-digit hashing is provided, but if you want to provide each module with an MD5 hash based on its path, just type `"--hash"`.
 ### Display as a List
 Queries:
-  - "-users" or "--unique_users" --> Display unique users
-  - "-mod" or "--unique_modules" --> Display unique modules
-  - "-f" or "--find" --> Find specific module/user
-  - "--spack" --> Search for specific Spack instances
-  - "--spack_root" --> Search for modules associated with specific Spack root module(e.g. cpu/0.17.3b)
+  - `"-users" or "--unique_users"` --> Display unique users
+  - `"-mod" or "--unique_modules"` --> Display unique modules
+  - `"-f" or "--find"` --> Find specific module/user
+  - `"--spack"` --> Search for specific Spack instances
+  - `"--spack_root"` --> Search for modules associated with specific Spack root module(e.g. cpu/0.17.3b)
 
 Example list:
 
 ![Screenshot 2024-07-28 at 11 25 13 PM](https://github.com/user-attachments/assets/e02837ea-0f3b-493b-9cea-223228d3cb72)
 
-........
+
 ![Screenshot 2024-07-28 at 11 25 21 PM](https://github.com/user-attachments/assets/8532a912-941b-4bcf-b03d-4c5de803555c)
 ### Display as a Pie Chart
 To display the modules/users on a pie chart, you must still type the aforementioned queries(e.g. "-users" and "-mod"). However, our project offers robust options to customize the graph.
 
 Queries: 
-  - "-plt" or "--plot" --> Plot data
-  - "-t" or "--top" --> Number of top modules/users to visualize. Defaults to five.
-  - "-all" --> Include all values in the pie chart
+  - `"-plt" or "--plot"` --> Plot data
+  - `"-t" or "--top"` --> Number of top modules/users to visualize. Defaults to five.
+  - `"-all"` --> Include all values in the pie chart
 
 Example chart:
-![cpu_table_all](https://github.com/user-attachments/assets/f2cdc65d-4d1f-4e8b-b9b4-a7492bd69be3)
+
+![cpu_table](https://github.com/user-attachments/assets/97ec0059-fee8-4824-924a-044f448e785c)
 # Acknowledgements
 This entire project wouldn't be possible without the efforts of program coordinator Ange Mason and consistent guidance from our mentor, Dr. Kandes. Additionally, we would like to thank UCSD and SDSC for hosting this amazing program!
 
