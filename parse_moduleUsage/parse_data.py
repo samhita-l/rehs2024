@@ -47,7 +47,7 @@ def build_dataframe(args):
     time = []
     unix_time = []
 
-    module_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), 'moduleTest'))
+    module_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), 'moduleUsage'))
     for filename in os.listdir(module_directory):
         with open(os.path.join(module_directory, filename)) as infile:
             for line in infile:
@@ -144,15 +144,24 @@ def plot_data(args, data_type, df, series):
     else:
         plot_title = f"Breakdown of Top {args.top} {data_type} in moduleUsage Logs"
 
-    top_modules = series.index
+    top_data = series.index
+    if args.unique_modules:
+        filtered_df = df[df['Modules'].isin(top_data)]
+    if args.unique_users:
+        filtered_df = df[df['Username'].isin(top_data)]
 
-    df['Date'] = pd.to_datetime(df['Date'])
-    filtered_df = df[df['Modules'].isin(top_modules)]
-    start_date = filtered_df['Date'].min().strftime("%m-%d-%Y")
-    end_date = filtered_df['Date'].max().strftime("%m-%d-%Y")
+    # Ensure the 'Date' column is in datetime format
+    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')  # Convert to datetime, coerce errors if any
+    filtered_df['Date'] = pd.to_datetime(filtered_df['Date'], errors='coerce')  # Same conversion for filtered_df
 
-    plot_title += f"\n\nFrom {start_date} to {end_date}"    
+    # Check if 'Date' column contains any NaT (Not a Time)
+    if df['Date'].isnull().any():
+        print("Warning: Some dates could not be converted to datetime format.")
 
+    # Get the date range for the plot title
+    start_date = filtered_df['Date'].min().strftime("%m-%d-%Y") if not filtered_df['Date'].min() is pd.NaT else 'N/A'
+    end_date = filtered_df['Date'].max().strftime("%m-%d-%Y") if not filtered_df['Date'].max() is pd.NaT else 'N/A'
+    plot_title += f"\n\nFrom {start_date} to {end_date}"
 
     # Sort the series by values and select the top 'args.top' items
     top_series = series.sort_values(ascending=False).head(args.top)
@@ -165,8 +174,6 @@ def plot_data(args, data_type, df, series):
             # Concatenate top_series with the "Other" category
             top_series = pd.concat([top_series, other_series])
 
-        start_date = df['Date'].min()
-        end_date = df['Date'].max()
         total_occurrences = series.sum()
     else:
         total_occurrences = top_series.sum()
@@ -190,7 +197,7 @@ def plot_data(args, data_type, df, series):
 
     # Create the table data
     table_data = pd.DataFrame({
-        'Module': top_series.index,
+        data_type: top_series.index.tolist(),
         'Occurrences': top_series.values,
         'Percentage': [f'{pct:.1f}%' for pct in top_series / total_occurrences * 100]
     })
@@ -222,7 +229,6 @@ def plot_data(args, data_type, df, series):
 
     # Show the plot
     plt.show(block=True)
-
 
 def output_data(args, data_type, series):
     print()
