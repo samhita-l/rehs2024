@@ -1,8 +1,10 @@
 # REHS 2024
-Part of the Research Experience for High School Students (REHS) program. Developed by Samhita Lagisetti and Ethan Jin under the supervision of Dr. Martin Kandes
+This project is part of the Research Experience for High School Students (REHS) program. 
+
+Developed by Samhita Lagisetti and Ethan Jin, under the supervision of Dr. Martin Kandes
 
 # Description
-Many users have implemented thousands of software modules on the Expanse supercomputer. These modules are tracked within various module usage logs, each containing hundreds of thousands of lines. Our goal was to sift through this data using Pandas (a Python library) and answer different queries about it, including but not limited to:
+On the Expanse supercomputer, users have implemented thousands of software modules. These modules are tracked within various usage logs, each one containing hundreds of thousands of lines. Our goal was to sift through this data using Pandas (a Python library) and answer different queries about it, including but not limited to:
 
   1. How often (or frequent) are the different Spack instances being used? i.e., how often are these module names loaded?
      - cpu/0.17.3b
@@ -28,7 +30,7 @@ Make sure Git is installed in your command-line interface. Then, run `git clone 
 This project has several features. User input is made possible by the argparse module, which creates a command-line interface in your local terminal. Start each query with `python parse_data.py`. We suggest viewing the project through Visual Studio Code.
 
 ## Running it directly
-If you run the file directly, the code will parse all the data from every module usage log and output neatly into a simple dataframe. From left to right, the headings are:
+If you run the file directly, the code will parse all the data from every module usage log and output it into a neat dataframe. From left to right, the headings are:
   - Module
   - Version
   - Hash
@@ -40,11 +42,11 @@ If you run the file directly, the code will parse all the data from every module
   - Time
   - Unix time
 ## Save dataframe
-To save the dataframe to a file, type "-s" or "--save" and the file type, either in csv or parquet format.
+To save the dataframe to a file, type `"-s" or "--save"`. The provided formats are .csv and .parquet.
 ## Find unique modules/users
 One of the core functionalities is sifting through the data to find unique users and modules.
 
-Hashing option: some modules, despite having the same name, differ depending on their origin. Automatic 7-digit hashing is provided, but if you want to provide each module with an MD5 hash based on its path, just type `"--hash"`.
+Hashing option: some modules, despite having the same name, differ depending on their origin. Automatic 7-digit hashing is included by default, but if you want to be more specific and generate an MD5 hash for each module based on its path, just type `"--hash"`.
 ### Display as a List
 Queries:
   - `"-users" or "--unique_users"` --> Display unique users
@@ -56,7 +58,6 @@ Queries:
 Example list:
 
 ![Screenshot 2024-07-28 at 11 25 13 PM](https://github.com/user-attachments/assets/e02837ea-0f3b-493b-9cea-223228d3cb72)
-
 
 ![Screenshot 2024-07-28 at 11 25 21 PM](https://github.com/user-attachments/assets/8532a912-941b-4bcf-b03d-4c5de803555c)
 ### Display as a Pie Chart
@@ -71,5 +72,7 @@ Example chart:
 
 ![cpu_table](https://github.com/user-attachments/assets/97ec0059-fee8-4824-924a-044f448e785c)
 # Acknowledgements
-This entire project wouldn't be possible without the efforts of program coordinator Ange Mason and consistent guidance from our mentor, Dr. Kandes. Additionally, we would like to thank UCSD and SDSC for hosting this amazing program!
+We would like to thank UCSD and SDSC for hosting this amazing program. 
+
+Additionally, this entire project wouldn't be possible without the efforts of program coordinator Ange Mason and consistent guidance from our mentor, Dr. Kandes.
 
