@@ -1,7 +1,10 @@
 # REHS 2024
 This project is part of the Research Experience for High School Students (REHS) program. 
 
-Developed by Samhita Lagisetti and Ethan Jin, under the supervision of Dr. Martin Kandes
+Developed by Samhita Lagisetti and Ethan Jin, under the supervision of Dr. Martin Kandes.
+
+Click [this link](https://github.com/user-attachments/files/16488524/Ethan.J.Samhita.L.Martin.K.REHS.2024.pdf) to download a PDF of the project research poster.
+
 
 # Description
 On the Expanse supercomputer, users have implemented thousands of software modules. These modules are tracked within various usage logs, each one containing hundreds of thousands of lines. Our goal was to sift through this data using Pandas (a Python library) and answer different queries about it, including but not limited to:
@@ -68,11 +71,13 @@ Queries:
   - `"-t" or "--top"` --> Number of top modules/users to visualize. Defaults to five.
   - `"-all"` --> Include all values in the pie chart
 
+Please remain patient while the graph is being generated. The runtime depends on the number of logs you are parsing through.
+
 Example chart:
 
 ![cpu_table](https://github.com/user-attachments/assets/97ec0059-fee8-4824-924a-044f448e785c)
 # Acknowledgements
 We would like to thank UCSD and SDSC for hosting this amazing program. 
 
-Additionally, this entire project wouldn't be possible without the efforts of program coordinator Ange Mason and consistent guidance from our mentor, Dr. Kandes.
+Additionally, our work wouldn't be possible without the efforts of program coordinator Ange Mason and consistent guidance from our mentor, Dr. Kandes.
 
