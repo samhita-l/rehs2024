@@ -30,7 +30,7 @@ On the Expanse supercomputer, users have implemented thousands of software modul
 Make sure Git is installed in your command-line interface. Then, run `git clone https://github.com/samhita-l/rehs2024.git` in the terminal to clone this project to your local device. 
 
 # Using the Code
-This project has several features. User input is made possible by the argparse module, which creates a command-line interface in your local terminal. Start each query with `python parse_data.py`. We suggest viewing the project through Visual Studio Code.
+This project has several features. User input is made possible by the argparse package, which creates a command-line interface in your local terminal. Start each query with `python parse_data.py`. We suggest viewing the project through Visual Studio Code.
 
 ## Running it directly
 If you run the file directly, the code will parse all the data from every module usage log and output it into a neat dataframe. From left to right, the headings are:
@@ -49,7 +49,7 @@ To save the dataframe to a file, type `"-s" or "--save"`. The provided formats a
 ## Find unique modules/users
 One of the core functionalities is sifting through the data to find unique users and modules.
 
-Hashing option: some modules, despite having the same name, differ depending on their origin. Automatic 7-digit hashing is included by default, but if you want to be more specific and generate an MD5 hash for each module based on its path, just type `"--hash"`.
+Hashing option: despite having the same name, some modules differ depending on their origin. Automatic 7-digit hashing is included by default, but if you want to be more specific and generate an MD5 hash for each module based on its path, just type `"--hash"`.
 ### Display as a List
 Queries:
   - `"-users" or "--unique_users"` --> Display unique users
