@@ -76,6 +76,12 @@ Please remain patient while the graph is being generated. The runtime depends on
 Example chart:
 
 ![cpu_table](https://github.com/user-attachments/assets/97ec0059-fee8-4824-924a-044f448e785c)
+
+### Customize Database Input
+module_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), 'moduleTest'))
+Replace 'moduleTest' with desired database name    
+
+
 # Acknowledgements
 We would like to thank UCSD and SDSC for hosting this amazing program. 
 
