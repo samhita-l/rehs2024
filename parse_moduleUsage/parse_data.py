@@ -49,7 +49,7 @@ def build_dataframe(args):
     time = []
     unix_time = []
 
-    module_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), 'moduleUsage'))
+    module_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), 'moduleTest'))
     for filename in os.listdir(module_directory):
         with open(os.path.join(module_directory, filename)) as infile:
             for line in infile:
@@ -58,18 +58,9 @@ def build_dataframe(args):
 
                 key_info = line[line.index("username"):].split(" ")
 
-                if (args.spack_root is not None):
-                    if (args.spack_root == "cpu/0.17.3b"):
-                        root = "/cm/shared/apps/spack/0.17.3/cpu/b"
-                    if (args.spack_root == "gpu/0.17.3b"):
-                        root = "/cm/shared/apps/spack/0.17.3/gpu/b"
-                    if (args.spack_root == "cpu/0.15.4"):
-                        root = "/cm/shared/apps/spack/cpu"
-                    if (args.spack_root == "gpu/0.15.4"):
-                        root = "/cm/shared/apps/spack/gpu"
-                        
-                    if (root not in key_info[4]):
-                        continue
+                if args.spack_root and not check_spack_root(args.spack_root, key_info[4]):
+                    continue
+
 
                 username.append(extract(key_info[0], "username"))
                 euid.append(extract(key_info[1], "euid"))
@@ -99,6 +90,17 @@ def build_dataframe(args):
 
     df = pd.DataFrame(data)
     return df
+
+
+def check_spack_root(spack_root, path):
+    """Check if the path matches the specified Spack root."""
+    root_paths = {
+        "cpu/0.17.3b": "/cm/shared/apps/spack/0.17.3/cpu/b",
+        "gpu/0.17.3b": "/cm/shared/apps/spack/0.17.3/gpu/b",
+        "cpu/0.15.4": "/cm/shared/apps/spack/cpu",
+        "gpu/0.15.4": "/cm/shared/apps/spack/gpu"
+    }
+    return root_paths.get(spack_root) in path
 
 
 def extract(line, info):
@@ -146,36 +148,29 @@ def plot_data(args, data_type, df, series):
     else:
         plot_title = f"Breakdown of Top {args.top} {data_type} in moduleUsage Logs"
 
-    top_data = series.index
-    if args.unique_modules:
-        filtered_df = df[df['Modules'].isin(top_data)]
-    if args.unique_users:
-        filtered_df = df[df['Username'].isin(top_data)]
+    top_modules = series.index
 
-    # Ensure the 'Date' column is in datetime format
-    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')  # Convert to datetime, coerce errors if any
-    filtered_df['Date'] = pd.to_datetime(filtered_df['Date'], errors='coerce')  # Same conversion for filtered_df
+    df['Date'] = pd.to_datetime(df['Date'])
+    filtered_df = df[df['Modules'].isin(top_modules)]
+    start_date = filtered_df['Date'].min().strftime("%m-%d-%Y")
+    end_date = filtered_df['Date'].max().strftime("%m-%d-%Y")
 
-    # Check if 'Date' column contains any NaT (Not a Time)
-    if df['Date'].isnull().any():
-        print("Warning: Some dates could not be converted to datetime format.")
+    plot_title += f"\n\nFrom {start_date} to {end_date}"    
 
-    # Get the date range for the plot title
-    start_date = filtered_df['Date'].min().strftime("%m-%d-%Y") if not filtered_df['Date'].min() is pd.NaT else 'N/A'
-    end_date = filtered_df['Date'].max().strftime("%m-%d-%Y") if not filtered_df['Date'].max() is pd.NaT else 'N/A'
-    plot_title += f"\n\nFrom {start_date} to {end_date}"
 
-    # Sort the series by values and select the top 'args.top' items
+    # Sort the filtered series by values and select the top 'args.top' items
     top_series = series.sort_values(ascending=False).head(args.top)
 
     if args.include_all:
-        # Aggregate "Other" category
+        # Aggregate "Other" category for items not included in top_series
         other_series = series[~series.index.isin(top_series.index)]
         if not other_series.empty:
             other_series = pd.Series({'Other': other_series.sum()})
             # Concatenate top_series with the "Other" category
             top_series = pd.concat([top_series, other_series])
 
+        start_date = df['Date'].min()
+        end_date = df['Date'].max()
         total_occurrences = series.sum()
     else:
         total_occurrences = top_series.sum()
@@ -265,8 +260,8 @@ def main():
     args = parse_user_input()
     if (args.csv_path is not None):
         df = pd.read_csv(args.csv_path)
-    if (args.parquet_path is not None):
-        df = pd.read_parquet(args.parquet_path, engine='fastparquet')
+    elif (args.parquet_path is not None):
+        df = pd.read_parquet(args.parquet_path, engine='pyarrow')
     else:
         df = build_dataframe(args)
 
