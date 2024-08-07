@@ -18,6 +18,8 @@ def parse_user_input():
 
     parser.add_argument('-s', '--save', action="store_true", help='Save dataframe to file')
     parser.add_argument('-ftype', '--filetype', type=str, default='csv', nargs='+', choices=['csv', 'parquet'], help='File type to save dataframe')
+    parser.add_argument('-rcsv', '--csv_path', type=str, help='Path of .csv file, read in to create a dataframe')
+    parser.add_argument('-rparquet', '--parquet_path', type=str, help='Path of .parquet file, read in to create a dataframe')
 
     parser.add_argument('-mod', '--unique_modules', action="store_true", help='Determine number of unique modules and how many times each one appears')
     parser.add_argument('--spack', action="store_true", help='Search for Spack instance modules')
@@ -51,7 +53,7 @@ def build_dataframe(args):
     for filename in os.listdir(module_directory):
         with open(os.path.join(module_directory, filename)) as infile:
             for line in infile:
-                if line.count("username") != 1 or line.count("gpu/0.17.3a") > 0:
+                if line.count("username") != 1 or line.count("gpu/0.17.3a") > 0 or line.count("cpu/0.17.3a") > 0:
                     continue
 
                 key_info = line[line.index("username"):].split(" ")
@@ -239,9 +241,11 @@ def output_data(args, data_type, series):
         if (args.spack_root is not None):
             print("\nThere are " + str(len(series)) + " unique " + data_type + "s associated with the Spack instance " + args.spack_root + ". The complete list is shown above, ranked by how many times each " + data_type + " appears.\n")
             print("The most frequent " + data_type + " is " + series.idxmax() + " with " + str(series.max()) + " occurrences.\n")
+        elif (args.spack):
+            print("\nThe Spack instance modules are listed above. The most frequent one is " + series.idxmax() + ", with " + str(series.max()) + " occurrences.\n")
         else:
             print("\nThere are " + str(len(series)) + " unique " + data_type + "s. The complete list is shown above, ranked by how many times each " + data_type + " appears.\n")
-            print("The most frequent " + data_type + " is " + series.idxmax() + " with " + str(series.max()) + " occurrences.\n")
+            print("The most frequent " + data_type + " is " + series.idxmax() + ", with " + str(series.max()) + " occurrences.\n")
     else:
         try:
             print("\nThis " + data_type + " appears " + str(series[args.find]) + " times.\n")
@@ -259,7 +263,12 @@ def generate_hash(path):
 
 def main():
     args = parse_user_input()
-    df = build_dataframe(args)
+    if (args.csv_path is not None):
+        df = pd.read_csv(args.csv_path)
+    if (args.parquet_path is not None):
+        df = pd.read_parquet(args.parquet_path, engine='fastparquet')
+    else:
+        df = build_dataframe(args)
 
     if (args.save):
         save_dataframe(df, args)
