@@ -54,6 +54,12 @@ If you run the file directly, the code will parse all the data from every module
   - Unix time
 ## Save dataframe
 To save the dataframe to a file, type `"-s" or "--save"`. The provided formats are .csv and .parquet.
+## Reading in CSV/Parquet files
+If you have saved the dataframe into a .csv or .parquet file, the program can read and analyze it.
+
+For csv files: type `"-rcsv" or "--csv_path"`, followed by the path to your desired file.
+
+For parquet files: type `"-rparquet" or "--parquet_path`, followed by the path to your desired file.
 ## Find unique modules/users
 One of the core functionalities is sifting through the data to find unique users and modules.
 
