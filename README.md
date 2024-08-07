@@ -29,8 +29,16 @@ On the Expanse supercomputer, users have implemented thousands of software modul
 # Install
 Make sure Git is installed in your command-line interface. Then, run `git clone https://github.com/samhita-l/rehs2024.git` in the terminal to clone this project to your local device. 
 
+# Dependencies
+This project requires two Python packages: Pandas and Matplotlib. We recommend managing your environment through [Conda](https://docs.conda.io/projects/conda/en/stable/) or [Miniconda](https://docs.anaconda.com/miniconda/).
+
 # Using the Code
-This project has several features. User input is made possible by the argparse module, which creates a command-line interface in your local terminal. Start each query with `python parse_data.py`. We suggest viewing the project through Visual Studio Code.
+This project has several features. User input is made possible by the argparse package, which creates a command-line interface in your local terminal. Start each query with `python parse_data.py`. We suggest viewing the project through Visual Studio Code.
+
+## Customize Database Input
+By default, the log files are stored within a folder named "moduleUsage": `module_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), 'moduleUsage'))`
+
+If you have stored the files to a different path, replace `moduleUsage` with the directory name. Alternatively, you can change the moduleUsage folder itself by taking out or adding files.
 
 ## Running it directly
 If you run the file directly, the code will parse all the data from every module usage log and output it into a neat dataframe. From left to right, the headings are:
@@ -49,7 +57,7 @@ To save the dataframe to a file, type `"-s" or "--save"`. The provided formats a
 ## Find unique modules/users
 One of the core functionalities is sifting through the data to find unique users and modules.
 
-Hashing option: some modules, despite having the same name, differ depending on their origin. Automatic 7-digit hashing is included by default, but if you want to be more specific and generate an MD5 hash for each module based on its path, just type `"--hash"`.
+Hashing option: despite having the same name, some modules differ depending on their origin. Automatic 7-digit hashing is included by default, but if you want to be more specific and generate an MD5 hash for each module based on its path, just type `"--hash"`.
 ### Display as a List
 Queries:
   - `"-users" or "--unique_users"` --> Display unique users
@@ -76,6 +84,8 @@ Please remain patient while the graph is being generated. The runtime depends on
 Example chart:
 
 ![cpu_table](https://github.com/user-attachments/assets/97ec0059-fee8-4824-924a-044f448e785c)
+
+
 # Acknowledgements
 We would like to thank UCSD and SDSC for hosting this amazing program. 
 
